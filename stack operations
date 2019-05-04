@@ -1,0 +1,71 @@
+#include <stdlib.h>
+#include <stdio.h>
+struct node{ 
+    int info; 
+    struct node *next;
+};
+struct node *head; 
+struct node *getnode(int info){
+     struct node newnode=(struct node)malloc(sizeof(struct node));  
+     newnode->info=info; 
+     newnode->next=NULL;
+     return newnode; 
+} 
+void push(int value){ 
+    if (head == NULL){ 
+        struct node* newnode = getnode(value);
+        head = newnode;
+        return; 
+    }
+    else{
+        struct node *newnode = getnode(value);
+        newnode->next = head;
+        head = newnode;
+    }
+}
+void pop(){ 
+    if (head == NULL){ 
+        printf("Empty List\n");
+        return; 
+    }
+    else{
+        struct node *temp=head;
+        head=temp->next;
+        free(temp);
+    }
+}
+void pull(){ 
+    if (head == NULL){ 
+        printf("Empty List\n");
+        return; 
+    }
+    else{
+        struct node *temp=head,*temp2;
+        while(temp->next!=NULL){
+            temp2=temp;
+            temp=temp->next;
+        }
+        temp2->next=NULL;
+        free(temp);
+    }
+}
+void display() { 
+    struct node *temp = head; 
+    printf("\nTraverse\n"); 
+    while (temp->next != NULL){ 
+        printf("%d ", temp->info); 
+        temp = temp->next; 
+    } 
+    printf("%d ", temp->info); 
+} 
+int main() { 
+    push(1); 
+    push(2); 
+    push(3); 
+    display(); 
+    pop();
+    push(6);
+    pull();
+    display(); 
+    return 0; 
+}
