@@ -1,0 +1,50 @@
+import time
+import RPi.GPIO as GPIO
+import httplib, urllib
+GPIO.setmode(GPIO.BCM)
+PIR_SENSOR = 19 
+LED = 13
+DELAY = 5
+GPIO.setup(PIR_SENSOR, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(LED, GPIO.OUT)
+PUSH_TOKEN = "avqw77c48wn9cc4bwu4xuoktp8jm3s" # API Token/Key
+PUSH_USER = "uc3kaagjaeh8m9a2yqkrh31t51az6w" # Your User Key
+PUSH_MSG = "hello chandan please OFF The Ac" 
+def sendPush( msg ):
+    conn = httplib.HTTPSConnection("api.pushover.net:443")
+    conn.request("POST", "/1/messages.json",
+        urllib.urlencode({
+            "token": PUSH_TOKEN,
+            "user": PUSH_USER,
+            "message": msg,
+        }), { "Content-type": "application/x-www-form-urlencoded" })
+
+    conn.getresponse()
+    return
+
+try:
+    
+    while True:
+        # motion is detected
+        GPIO.wait_for_edge(PIR_SENSOR, GPIO.RISING)
+        
+        GPIO.output(LED, True)
+        time.sleep(.1)
+        GPIO.output(LED,False)
+        time.sleep(.1)
+
+        print(PUSH_MSG)
+        sendPush(PUSH_MSG)
+
+        
+        time.sleep(DELAY)
+        
+        #GPIO.output(LED, False)
+
+except KeyboardInterrupt:
+    # cleanup GPIOs on keyboard exit
+    GPIO.cleanup()
+
+# cleanup GPIOs when program exits
+GPIO.cleanup()
+
