@@ -1,0 +1,31 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+int main(int argc, char** argv) {
+    int child1, child2;
+    float a = 1.0, b = 2.0, result = 0.0;
+    printf("\nMain process id is : %d\n", getpid());
+    printf("\nProcess       \tID\tResult   \tParentID\n");
+    child1 = fork();
+    child2 = fork();
+    if (child1 == 0 && child2 == 0) {
+        //1st branch
+        result = a + b;
+        //3rd branch
+        result = a*b;
+        printf("\nMultiplication\t%d\t%f\t%d\n", getpid(), result, getppid());
+    } else if (child1 == 0 && child2 > 0) {
+        //4th branch
+        result = a / b;
+        printf("\nDivision\t%d\t%f\t%d\n", getpid(), result, getppid());
+    }
+    else {
+        //2nd process
+        result = a - b;
+        printf("\nSubtraction\t%d\t%f\t%d\n", getpid(), result, getppid());
+        sleep(0);
+    }
+    return (EXIT_SUCCESS);
+}
+

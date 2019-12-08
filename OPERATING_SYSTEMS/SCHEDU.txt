@@ -1,0 +1,98 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <pthread.h>
+void *roundRobin(void *arg) {
+    int timeslice = rand() % 15 + 5, *p = arg;
+    int cpu_time[5],temp[5], wait_time[5], tr_time[5], trace = 0, current_time = 0,total_wait=0,total_tr=0;
+    for (int i = 0; i < 5; i++){
+        cpu_time[i] = *p++;
+        temp[i]=cpu_time[i];
+        wait_time[i] = 0;
+    }
+    while (trace != 5) {
+        for (int i = 0; i < 5; i++) {
+            if (cpu_time[i] != 0) {
+                if (cpu_time[i] > timeslice) {
+                    cpu_time[i] = cpu_time[i] - timeslice;
+                    current_time = current_time + timeslice;
+                } else {
+                    current_time = current_time + cpu_time[i];
+                    tr_time[i] = current_time;
+                    cpu_time[i] = 0;
+                    trace++;
+                }
+                wait_time[i]=current_time-temp[i];
+            }
+        }
+    }
+
+    printf("Simulation Table from Round Robin Algorithm :\nTimeslice = %d\nProcess\tCPU\tWait\tTurnaround\n", timeslice);
+    for (int i = 0; i < 5; i++) {
+        printf("%d\t%d\t%d\t%d\n",i+1,temp[i],wait_time[i], tr_time[i]);
+        total_wait += wait_time[i];
+        total_tr += tr_time[i];
+    }
+    printf("Average wait = %d\nAverage TR time = %d\n", total_wait / 5, total_tr / 5);
+}
+
+void *prior(void *arg) {
+    srand(time(0));
+    int sim_table[5][5], *p = arg, wait, tr_time;
+    for (int i = 0; i < 5; i++) {
+        sim_table[i][0] = i + 1;
+        sim_table[i][1] = *p++;
+        sim_table[i][2] = rand() % 10 + 1;
+    }
+    printf("Simulation Table from Priority Algorithm :\nGenerated priority order :\n");
+    for (int i = 0; i < 5; i++) {
+        printf("%d\t", sim_table[i][2]);
+    }
+    printf("\n");
+    for (int i = 0; i < 5; i++)
+        for (int j = i + 1; j < 5; j++)
+            if (sim_table[i][2] < sim_table[j][2]) {
+                int temp = sim_table[i][2];
+                sim_table[i][2] = sim_table[j][2];
+                sim_table[j][2] = temp;
+                temp = sim_table[i][1];
+                sim_table[i][1] = sim_table[j][1];
+                sim_table[j][1] = temp;
+                temp = sim_table[i][0];
+                sim_table[i][0] = sim_table[j][0];
+                sim_table[j][0] = temp;
+            }
+    sim_table[0][3] = 0;
+    sim_table[0][4] = sim_table[0][1];
+    for (int i = 1; i < 5; i++) {
+        sim_table[i][3] = sim_table[i - 1][4];
+        sim_table[i][4] = sim_table[i][3] + sim_table[i][1];
+    }
+    printf("Process\tCPU\tPrior\tWait\tTurnaround\n");
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++)
+            printf("%d\t", sim_table[i][j]);
+        printf("\n");
+        wait = sim_table[i][4];
+        tr_time = sim_table[i][3];
+    }
+    printf("Average wait = %d\nAverage TR time = %d\n", wait / 5, tr_time / 5);
+}
+
+int main(int argc, char** argv) {
+    srand(time(0));
+    pthread_t round_robin, priority;
+    int cpu_burst_time[5];
+    printf("Generated CPU Burst time :\n");
+    for (int i = 0; i < 5; i++) {
+        cpu_burst_time[i] = rand() % 20 + 1;
+        printf("%d\t", cpu_burst_time[i]);
+    }
+    printf("\n");
+    pthread_create(&round_robin, NULL, roundRobin, &cpu_burst_time[0]);
+    pthread_create(&priority, NULL, prior, &cpu_burst_time[0]);
+    pthread_join(priority, NULL);
+    pthread_join(round_robin, NULL);
+    return (EXIT_SUCCESS);
+}
+

@@ -1,0 +1,71 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#define n 5
+int mem_partition[n], process_size[n], temp[n];
+
+void firstFit() {
+    printf("\nFirst Fit\n");
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            if (process_size[i] <= temp[j]) {
+                printf("Process %d is allotted %d partition of size %d\n", i, j, temp[j]);
+                temp[j] = 0;
+                break;
+            }
+}
+
+void bestFit() {
+    printf("\nBest Fit\n");
+    for (int i = 0; i < n; i++)
+        temp[i] = mem_partition[i];
+    int min, point;
+    for (int i = 0; i < n; i++) {
+        min = 100;
+        for (int j = 0; j < n; j++)
+            if (process_size[i] <= temp[j] && abs(process_size[i] - temp[j]) < min) {
+                min = abs(process_size[i] - temp[j]);
+                point = j;
+            }
+        if (abs(process_size[i] - temp[point]) != process_size[i]) {
+            printf("Process %d is allotted %d partition of size %d\n", i, point, temp[point]);
+            temp[point] = 0;
+        }
+    }
+}
+
+void worstFit() {
+    printf("\nWorst Fit\n");
+    for (int i = 0; i < n; i++)
+        temp[i] = mem_partition[i];
+    for(int i=0;i<n;i++)
+        for(int j=0;j<n;j++)
+            if(temp[i]>temp[j]){
+                int temp1 = temp[i];
+                temp[i]=temp[j];
+                temp[j]=temp1;
+            }
+    for(int i=0;i<n;i++)
+        for(int j=0;j<n;j++)
+            if(process_size[i]<=temp[j]){
+                printf("Process %d is allotted %d partition of size %d\n", i, j, temp[j]);
+                temp[j] = 0;
+                break;
+            }
+}
+
+int main(int argc, char** argv) {
+    srand(time(0));
+    printf("Mem\tPrcss\n");
+    for (int i = 0; i < n; i++) {
+        mem_partition[i] = rand() % 20 + 5;
+        process_size[i] = rand() % 20 + 5;
+        temp[i] = mem_partition[i];
+        printf("%d\t%d\n", mem_partition[i], process_size[i]);
+    }
+    firstFit();
+    bestFit();
+    worstFit();
+    return (EXIT_SUCCESS);
+}
+

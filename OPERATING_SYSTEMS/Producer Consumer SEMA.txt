@@ -1,0 +1,55 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <sys/unistd.h>
+sem_t mutex,empty,full;
+int N = 10, MAX=20;
+int head = 0, tail = 0, shared_space[10];
+int count=0;
+void produce(int val){
+    shared_space[tail%N]=val;
+    tail++;
+    printf("%d Produced : %d\n",count,val);
+}
+
+void consume(){
+    printf("%d Consumed : %d\n",count,shared_space[(head)%N]);
+    shared_space[(head)%N]=0;
+    head++;
+    count--;
+}
+
+void prod1(){
+    for(int i=0;i<MAX;i++){
+        sem_wait(&empty);
+        sem_wait(&mutex);
+        produce(rand()%10+1);
+        sem_post(&mutex);
+        sem_post(&full);
+    }
+}
+void cons1(){
+    for(int i=0;i<MAX;i++){
+        sem_wait(&full);
+        sem_wait(&mutex);
+        consume();
+        sem_post(&mutex);
+        sem_post(&empty);
+    }
+}
+int main(int argc, char** argv) {
+    pthread_t prod,cons;
+    sem_init(&mutex,0,1);
+    sem_init(&empty,0,N);
+    sem_init(&full,0,0);
+    pthread_create(&prod,NULL,prod1,NULL);
+    pthread_create(&cons,NULL,cons1,NULL);
+    pthread_join(prod,NULL);
+    pthread_join(cons,NULL);
+    sem_destroy(&mutex);
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    return (EXIT_SUCCESS);
+}
+

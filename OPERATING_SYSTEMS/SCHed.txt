@@ -1,0 +1,117 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <time.h>
+#define row 5
+#define column 2
+#define timeSlice 2
+int data1[row][column],data2[row][column];
+char process[row],process2[row];
+void *priority(void *arg) {
+    printf("Priority Scheduling\n     Priority\tST\n");
+    int a,b,c_sum=0;
+    char c;
+    for (int i = 0; i < row; i++)
+        printf("%c\t%d\t%d\n",process[i],data1[i][0],data1[i][1]);
+    for (int i = 0; i < row; i++)
+        for (int j = i + 1; j < row; j++)
+            if (data1[i][0] <= data1[j][0]){
+                a =  data1[i][0];
+                b =  data1[i][1];
+                c = (int)process[i];
+                data1[i][0] = data1[j][0];
+                data1[i][1] = data1[j][1];
+                process[i] = (int)process[j];
+                data1[j][0] = a;
+                data1[j][1] = b;
+                process[j] = (int)c;
+            }
+    int turnaroundTime=0,waitingTime=0;
+    for (int i = 0; i < row; i++)
+        printf("    %c\t",process[i]); printf("\n");
+    for (int i = 0; i < row; i++){
+        waitingTime=waitingTime+c_sum;
+        printf("%d\t",c_sum);
+        c_sum=c_sum+data1[i][1];
+        turnaroundTime=turnaroundTime+c_sum;
+    }
+    printf("%d",c_sum);
+    printf("\nAverage TurnAround Time = %0.2f",((float)turnaroundTime/(float)row));
+    printf("\nAverage Waiting Time = %0.2f",((float)waitingTime/(float)row));
+    pthread_exit(NULL);
+}
+void *roundRobin(void *arg) {
+    printf("\n\nRound Robin\n");
+    printf("       ST\n");
+    for(int i=0;i<row;i++)
+        printf("%c\t%d\t\n",process2[i],data2[i][1]);
+    int totalServiceTime=0;
+    printf("\n");
+    for(int i=0;i<row;i++)
+        totalServiceTime=totalServiceTime+data2[i][1];
+    int noOfSlices=(totalServiceTime/timeSlice)+1,slices[noOfSlices+row];
+    int c_sum[noOfSlices+row],j=0,a[row];
+    c_sum[0]=0;
+    for (int i = 0; i < row; i++)
+        printf("%c\t",65+i);
+    int tempTotalServiceTime=totalServiceTime;
+    while(totalServiceTime) {
+        printf("\n");
+        for (int i = 0;  i<row; i++){
+            int temp2=data2[i][1];
+            if(data2[i][1] >= timeSlice){
+                data2[i][1]=data2[i][1]-timeSlice;
+                totalServiceTime=totalServiceTime-timeSlice;
+            }
+            else if(data2[i][1]==0)
+                printf("");
+            else{
+                totalServiceTime=totalServiceTime-data2[i][1];
+                data2[i][1]=0;
+            }
+            
+            c_sum[j+1]=c_sum[j]+(temp2-data2[i][1]);
+            if(c_sum[j]!=c_sum[j+1])
+                a[i]=c_sum[j+1];
+            if(c_sum[j+1]!=c_sum[j])
+                printf("%d\t",c_sum[j+1]);
+            else
+                printf("\t");
+            slices[j]=i;
+            j++;
+        }
+    }
+    int turnaroundTime=0,waitingTime=0;
+    if (totalServiceTime==0){
+            printf("\nService End Time Of Each Process\n");
+            for (int i = 0; i < row; i++){
+                printf("%d\t",a[i]);
+                turnaroundTime=turnaroundTime+a[i];
+            }
+    }
+    waitingTime=turnaroundTime-tempTotalServiceTime;
+    printf("\nAverage TurnAround Time = %0.2f",((float)turnaroundTime/(float)row));
+    printf("\nAverage Waiting Time = %0.2f",((float)waitingTime/(float)row));
+    pthread_exit(NULL);
+}
+int main() {
+    srand(time(0));
+    pthread_t thread[2];
+    void *ptr;
+    for(int i=0;i<row;i++){
+        process[i]=65+i;
+        process2[i]=65+i;
+        data1[i][0]=rand()%10+1;
+        data1[i][1]=rand()%10+1;
+        data2[i][0]=rand()%5+1;
+        data2[i][1]=data1[i][1];
+    }
+    pthread_create(&thread[0], NULL, priority,NULL);
+    pthread_join(thread[0],NULL);
+    pthread_create(&thread[1], NULL, roundRobin,NULL);
+    pthread_join(thread[1],NULL);
+    return (EXIT_SUCCESS);
+}
+
+
+

@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#define THINKING 0
+#define HUNGRY 1
+#define EATING 2
+
+pthread_mutex_t mutex;
+pthread_cond_t phil[5];
+int state[5];
+
+void *fun(int i) {
+    state[i] = THINKING;
+    printf("Process %d THINKING\n", i + 1);
+    sleep(1);
+    takeFork(i);
+    putFork(i);
+}
+
+void takeFork(int i) {
+    pthread_mutex_lock(&mutex);
+    state[i] = HUNGRY;
+    printf("Process %d HUNGRY\n", i + 1);
+    test(i);
+    pthread_mutex_unlock(&mutex);
+    //pthread_cond_wait(&phil[i],&mutex);    
+}
+
+void test(int i) {
+    if (state[i] == HUNGRY && state[(i + 5 - 1) % 5] != EATING && state[(i + 1) % 5] != EATING) {
+        state[i] = EATING;
+        printf("Process %d EATING\n", i + 1);
+        //pthread_cond_signal(&phil[i]);
+    }
+}
+
+void putFork(int i) {
+    if (state[i] == EATING) {
+        pthread_mutex_lock(&mutex);
+        state[i] = THINKING;
+        printf("Process %d put fork down and THINKING\n", i + 1);
+        test((i + 1) % 5);
+        test((i + 5 - 1) % 5);
+        pthread_mutex_unlock(&mutex);
+    }
+}
+
+int main(int argc, char** argv) {
+    pthread_mutex_init(&mutex, 0);
+    pthread_t ph[5];
+    for (int i = 0; i < 5; i++) {
+        state[i] = THINKING;
+        pthread_cond_init(&phil[i], 1);
+    }
+    for (int i = 0; i < 5; i++)
+        pthread_create(&ph[i], NULL, fun, i);
+    for (int i = 0; i < 5; i++)
+        pthread_join(ph[i], NULL);
+    return (EXIT_SUCCESS);
+}

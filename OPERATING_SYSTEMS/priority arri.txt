@@ -1,0 +1,89 @@
+//0-no    1-at  2-pr  3-sst  4-st 5-set 6-wt 7-tr   8-rd
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <time.h>
+#define row 5
+#define column 9
+
+float sim_table[5][9];
+int last_set = 0, position_avail_to = 0, position_avail_from = 0;
+
+void update_table() {
+    for (int i = position_avail_from; i < row; i++)
+        if (sim_table[i][1] <= last_set) {
+            for (int j = 0; j < column; j++) {
+                int temp = sim_table[i][j];
+                sim_table[i][j] = sim_table[position_avail_to][j];
+                sim_table[position_avail_to][j] = temp;
+            }
+            position_avail_to++;
+        }
+    for (int i = position_avail_from; i < position_avail_to; i++)
+        for (int j = position_avail_from; j < position_avail_to; j++) {
+            if (sim_table[i][2] > sim_table[j][2])
+                for (int k = 0; k < column; k++) {
+                    int temp = sim_table[i][k];
+                    sim_table[i][k] = sim_table[j][k];
+                    sim_table[j][k] = temp;
+                }
+        }
+    position_avail_from = position_avail_to;
+}
+
+void calc_set(int i) {
+    sim_table[i][5] = sim_table[i][3] + sim_table[i][4];
+}
+
+void calc_relDel(int i) {
+    sim_table[i][8] = sim_table[i][7] / sim_table[i][4];
+}
+
+//0-no    1-at  2-pr  3-sst  4-st 5-set 6-wt 7-tr   8-rd
+
+int main(int argc, char** argv) {
+    srand(time(0));
+    sim_table[0][1] = 0;
+    sim_table[0][2] = rand() % 9;
+    sim_table[0][4] = rand() % 6 + 1;
+    for (int i = 1; i < row; i++) {
+        sim_table[i][1] = rand() % 6 + 1;
+        sim_table[i][2] = rand() % 9;
+        sim_table[i][4] = rand() % 6 + 1;
+    }
+    for (int i = 0; i < row; i++)
+        for (int j = 0; j < row; j++)
+            if (sim_table[i][1] < sim_table[j][1]) {
+                int temp = sim_table[i][1];
+                sim_table[i][1] = sim_table[j][1];
+                sim_table[j][1] = temp;
+            }
+    for (int i = 0; i < row; i++)
+        sim_table[i][0] = i + 1;
+        printf("No\tA\tPR\tSST\tST\tSET\tWT\tTR\tRD\n");
+    for (int i = 0; i < row; i++) {
+        for (int j = 0; j < column; j++)
+            printf("%.1f\t", sim_table[i][j]);
+        printf("\n");
+    }
+    printf("\n\n\n");
+    for (int i = 0; i < row; i++) {
+        update_table();
+        sim_table[i][3] = last_set;
+        sim_table[i][6] = sim_table[i][3] - sim_table[i][1];
+        pthread_t th_set, th_relDel;
+        pthread_create(&th_set, NULL, calc_set, i);
+        pthread_join(th_set, NULL);
+        sim_table[i][7] = sim_table[i][5] - sim_table[i][1];
+        pthread_create(&th_relDel, NULL, calc_set, i);
+        pthread_join(th_relDel, NULL);
+        last_set = sim_table[i][5];
+    }
+    for (int i = 0; i < row; i++) {
+        for (int j = 0; j < column; j++)
+            printf("%.1f\t", sim_table[i][j]);
+        printf("\n");
+    }
+    return (EXIT_SUCCESS);
+}

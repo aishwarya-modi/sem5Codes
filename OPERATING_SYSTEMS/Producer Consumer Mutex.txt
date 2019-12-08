@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <sys/unistd.h>
+pthread_mutex_t mutex;
+pthread_cond_t condc, condp;
+int N = 10, MAX=50;
+int head = 0, tail = 0, shared_space[10], full = 0, empty = 10;
+int consumeCount=0,produceCount=0;
+void produce(int val){
+    if(produceCount==N-1){
+        printf("Buffer if full\n");
+        return NULL;
+    }
+    
+    produceCount++;
+    shared_space[(tail++)%N]=val;
+    printf("%d Produced : %d\n",produceCount,val);
+}
+void consume(){
+    consumeCount++;
+    printf("%d Consumed : %d\n",consumeCount,shared_space[(head++)%N]);
+}
+void *prod1(){
+    for(int i=0;i<MAX;i++){
+        pthread_mutex_lock(&mutex);
+        if(empty==0) pthread_cond_wait(&condp,&mutex);
+        empty--;
+        produce(rand()%10+1);
+        full++;
+        pthread_cond_signal(&condc);
+        pthread_mutex_unlock(&mutex);
+    }
+}
+void *cons1(){
+    sleep(5);
+    for(int i=0;i<MAX;i++){
+        pthread_mutex_lock(&mutex);
+        if(full==0) pthread_cond_wait(&condc,&mutex);
+        consume();
+        full--;
+        empty++;
+        pthread_cond_signal(&condp);
+        pthread_mutex_unlock(&mutex);
+    }
+}
+int main() {
+    srand(time(0));
+    pthread_t prod,cons;
+    pthread_mutex_init(&mutex,0);
+    pthread_cond_init(&condc,0);
+    pthread_cond_init(&condp,0);
+    pthread_create(&prod,NULL,prod1,NULL);
+    pthread_create(&cons,NULL,cons1,NULL);
+    pthread_join(prod,NULL);
+    pthread_join(cons,NULL);
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&condc);
+    pthread_cond_destroy(&condp);
+    return (EXIT_SUCCESS);
+}
+

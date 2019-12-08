@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <semaphore.h>
+#include <pthread.h>
+#include <sys/unistd.h>
+#define n 4
+#define max 50
+sem_t mutex,db;
+int readerCount=0;
+int readCount=0,writeCount=0;
+int data[max];
+void reader(int i){
+    while (1) {
+        float sleepTime=rand()%1;
+        sleep(sleepTime);
+        
+        sem_wait(&mutex);
+        readerCount++;
+        if (readerCount==1)sem_wait(&db);
+        sem_post(&mutex);
+        
+        if (readCount<max){
+            printf("%d   %d----Reading = %d\n",i,readCount,data[readCount]);
+        }
+        else return NULL;
+        readCount++;
+        //read data base
+        sem_wait(&mutex);
+        readerCount--;
+        if (readerCount==0)sem_post(&db);
+        sem_post(&mutex);
+        //use data base
+    }
+}
+void writer(int i){
+    while (1) {
+        float sleepTime=rand()%1;
+        sleep(sleepTime);
+        int thinkData = rand()%100;//think up data
+        sem_wait(&db);
+        if (writeCount<max) {
+            data[writeCount]=thinkData;//write data base
+            printf("%d   %d Writing = %d\n",i,writeCount,data[writeCount]);
+        }
+        else return NULL;
+        writeCount++;
+        sem_post(&db);
+    }
+}
+void main() {
+    pthread_t read[n],write[n];
+    sem_init(&mutex,0,1);
+    sem_init(&db,0,1);
+    for (int i = 0; i < n; i++){
+        pthread_create(&write[i],NULL,writer,i);
+        printf("Writer created\n");
+        pthread_create(&read[i],NULL,reader,i);
+        printf("Reader created\n");
+    }
+    for (int i = 0; i < n; i++){
+        pthread_join(write[i],NULL);
+        printf("Writer returned\n");
+        exit(0);
+        pthread_join(read[i],NULL);
+        printf("Reader returned\n");
+    }
+    sem_destroy(&mutex);
+    sem_destroy(&db);
+}
+

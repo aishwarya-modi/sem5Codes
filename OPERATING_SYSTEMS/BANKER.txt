@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define numOfProcess 3
+#define numOfResource 4
+int resourceAssigned[numOfProcess][numOfResource],repetationCounter=0,processStatus[numOfProcess]={0};
+int resourceTotal[numOfResource],resourceLeft[numOfResource],temp[numOfResource]={0};
+int resourceNeeded[numOfProcess][numOfResource],lessthan,i=0,processLeft=numOfProcess;
+void calculate(){
+    while(processLeft>0){
+        if (repetationCounter>(2*numOfProcess))
+            printf("\nThe Scheduling of process is not safe");
+        i=i%numOfProcess;
+        lessthan=0;
+        if(processStatus[i]==0){
+            for (int j = 0; j < numOfResource; j++)
+                if(resourceLeft[j]<resourceNeeded[i][j])
+                    lessthan++;
+            if (lessthan==0) {
+                processLeft--;
+                processStatus[i]=1;
+                printf("Process %d is done : ",i);
+                for (int j = 0; j < numOfResource; j++) {
+                    printf("%d ",resourceAssigned[i][j]);
+                    resourceLeft[j]=resourceLeft[j]+resourceAssigned[i][j];
+                }
+                printf("\t A = ");
+                for (int j = 0; j < numOfResource; j++)
+                    printf("%d ",resourceLeft[j]);
+                printf("\n");
+            }repetationCounter++;
+        }
+        i++;
+    }
+    if(processLeft==0)
+        printf("\nThe system is Safe\n");
+}
+int main() {
+    printf("Enter Total resource : ");
+    for (int j = 0; j < numOfResource; j++)
+        scanf("%d",&resourceTotal[j]);
+    printf("Enter Allocated resource\n");
+    for (int i = 0; i < numOfProcess; i++)
+        for (int j = 0; j < numOfResource; j++)
+            scanf("%d",&resourceAssigned[i][j]);
+    printf("Value of A : ");
+    for (int i = 0; i < numOfResource; i++){
+        resourceLeft[i]=resourceTotal[i];
+        for (int j = 0; j < numOfProcess; j++){
+            resourceLeft[i]-=resourceAssigned[j][i];
+        }
+        printf("%d ",resourceLeft[i]);
+    }
+    printf("\n");
+    printf("Enter Needed resource\n");
+    for (int i = 0; i < numOfProcess; i++)
+        for (int j = 0; j < numOfResource; j++)
+            scanf("%d",&resourceNeeded[i][j]);
+    calculate();
+    return (EXIT_SUCCESS);
+}
