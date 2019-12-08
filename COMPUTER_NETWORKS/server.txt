@@ -1,0 +1,54 @@
+#include "inet.h"
+
+int main(int argc,char *argv[])
+{
+
+	int sockfd,newsockfd,clilen,childpid,fd;
+	struct sockaddr_in cli_addr,serv_addr;
+	char buffer[BUFLEN];
+
+	if((sockfd=socket(AF_INET,SOCK_STREAM,0))<0)
+		printf("socket error");
+
+	bzero((char*) &serv_addr,sizeof(serv_addr));
+	serv_addr.sin_family=AF_INET;
+	serv_addr.sin_addr.s_addr=htonl(INADDR_ANY);
+	serv_addr.sin_port=htons(7777);
+
+	if(bind(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr))<0)
+		printf("Bind error");
+	while(1)
+	{
+		listen(sockfd,5);
+		for(;;)
+		{ // listen(sockfd,5);
+			printf("server process");
+			clilen=sizeof(cli_addr);
+			newsockfd=accept(sockfd,(struct sockaddr *)&cli_addr,&clilen);
+			if(newsockfd<0)
+				printf("server accept error");
+			else
+				printf("Server: request accepted \n");
+
+			if((childpid=fork())<0)
+				printf("server:fork error");
+			else if(childpid==0)
+			{
+				close(sockfd);
+				while(1)
+				{
+					read(newsockfd,buffer,BUFLEN);
+					printf("%s",buffer);
+					if(sizeof(buffer)<=1) exit(0);
+					if((fd=open(buffer,O_RDONLY))<0)
+						strcpy(buffer,"Server:file does not exist");
+					read(fd,buffer,BUFLEN);
+					write(newsockfd,buffer,BUFLEN);
+				}
+			
+			}
+			close(newsockfd);
+			//exit(0);
+		}
+	}
+}

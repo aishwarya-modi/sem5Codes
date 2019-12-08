@@ -1,0 +1,29 @@
+#include"inet.h"
+int main(int argc, char *argv[])
+{
+int sockfd;
+struct sockaddr_in serv_addr;
+char buf[BUFLEN];
+
+bzero((char*)&serv_addr,sizeof(serv_addr));
+serv_addr.sin_family=AF_INET;
+serv_addr.sin_addr.s_addr=inet_addr(SERV_HOST_ADDR);
+serv_addr.sin_port=htons(7777);	
+
+if((sockfd=socket(AF_INET,SOCK_STREAM,0))<0)
+		printf("socket error");
+
+if(connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr))<0)			printf("connect error");
+//printf("\nConnected to server at port : %d",SERV_TCP_PORT);
+while(1){
+	printf("Enter the file name\n");
+	scanf("%s",buf);
+	write(sockfd,buf,BUFLEN);
+	printf("File contents\n");
+	read(sockfd,buf,BUFLEN);
+	printf("%s\n",buf);
+}
+close(sockfd);
+return(0);
+}
+

@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#define noOfFrames 20
+int winSize,sent=0,acknowledgement=0,j=0,noOfFramesLeft=noOfFrames;
+void main() {
+    int m;
+    clock_t start,stop;
+    printf("Enter the m value : ");
+    scanf("%d",&m);
+    winSize=pow(2,m)/2;
+    printf("Win Size = %d\n",winSize);
+    srand(time(0));
+    int frames[noOfFrames],transmittedFrames[noOfFrames]={0};
+    framesValue(frames,noOfFrames);
+    printFrames(frames,noOfFrames);
+    printFrames(transmittedFrames);
+    // CALCULATION
+    int recieved=0;
+    int acknowledgementCount=0;
+    int nak=0;
+    while (noOfFramesLeft>0) {
+        printf("Frame transmitted : ");
+        start=clock();
+        for(int i = 0; i < winSize; i++){
+            printf(" %d ",sent);
+            sent++;
+            if(sent == noOfFrames)
+                break;
+        }
+        stop=clock()+100;
+        int transmissionTime = stop;
+        printf("\nTicks taken in Transmission = %d\n",transmissionTime);
+        int acknowledgementTime=rand()%(2*transmissionTime);
+        printf("Ticks taken in Acknowledgement = %d\n",acknowledgementTime);
+        if(acknowledgementTime<=transmissionTime)
+            acknowledgement=rand()%(winSize);
+        else{
+            acknowledgement=0;
+            printf("Acknowledgement Timeout Or Not Recieved\n");
+        }
+        if(acknowledgement==0)
+            acknowledgementCount++;
+        if(acknowledgementCount==2){
+            acknowledgement++;
+            acknowledgementCount=0;
+        }
+        
+        recieved+=acknowledgement;
+        int nak = recieved-rand()%(winSize);
+        if(recieved>winSize){
+            printf("NAK of = %d\n",nak);
+            printf("Resent frame =  %d ",nak);
+        }
+        printf("\nAcknowledgement received : %d\n\n",recieved);
+        
+        printFrames(frames,noOfFrames);
+        framesCopying(frames,transmittedFrames,recieved+1);
+        printFrames(transmittedFrames,recieved+1);
+        noOfFramesLeft=noOfFrames-(recieved+1);
+        if(noOfFramesLeft == noOfFrames)
+            break;
+        else
+            sent = recieved+1;
+        if(noOfFramesLeft<winSize)
+            winSize=noOfFramesLeft;
+    }
+}
+void printFrames(int frames[],int till){
+    for(int i=0;i<till;i++)
+        printf("%d  ",frames[i]);
+    printf("\n");
+}
+void framesValue(int frames[]){
+    for(int i=0;i<noOfFrames;i++)
+        frames[i]=i%winSize;
+}
+
+void framesCopying(int frame1[],int frame2[],int till){
+    for(int i=0;i<till;i++){
+        frame2[i]=frame1[i];
+    }
+}

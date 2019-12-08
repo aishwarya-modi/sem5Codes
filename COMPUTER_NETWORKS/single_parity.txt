@@ -1,0 +1,33 @@
+#include <stdio.h>
+void main (){
+    int parity[8];
+    int countOfZero = 0;
+    int countOfOne = 0;
+    printf ("Enter 7 bit Binary number : ");
+    for (int i = 0; i < 7; i++){
+        scanf ("%d", &parity[i]);
+        if (parity[i] == 1){
+            countOfOne++;
+        }
+    }
+    printf ("Even parity\n");
+    if (countOfOne % 2 == 1){
+        parity[7] = 1;
+    }
+    else{
+        parity[7] = 0;
+    }
+    for (int i = 0; i < 8; i++){
+        printf ("%d", parity[i]);
+    }
+    printf ("\nOdd parity\n");
+    if (countOfOne % 2 == 1){
+        parity[7] = 0;
+    }
+    else{
+        parity[7] = 1;
+    }
+    for (int i = 0; i < 8; i++){
+        printf ("%d", parity[i]);
+    }
+}

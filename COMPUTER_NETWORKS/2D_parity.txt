@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <stdlib.h>
+int main() {
+    int length;
+    printf("Enter length of polynomial : ");
+    scanf("%d",&length);
+    int polynomial[length];
+    int zeros[length];
+    printf("Enter polynomial in Binary format : ");
+    for (int i=0;i<length;i++){
+        scanf("%d",&polynomial[i]);
+        zeros[i]=0;
+    }
+    int redundency = length-1;
+    int dataLength;
+    printf("Enter Data length : ");
+    scanf("%d",&dataLength);
+    int data[dataLength+redundency];
+    int dataRedundency[redundency+dataLength];
+    printf("Enter data : ");
+    for (int i=0;i<dataLength;i++){
+        scanf("%d",&dataRedundency[i]);
+        data[i]=dataRedundency[i];
+    }
+    for(int i=dataLength;i<(dataLength+redundency);i++){
+        dataRedundency[i]=0;
+    }
+    printf("Data with Redundancy : ");
+    for(int i=0;i<(dataLength+redundency);i++){
+        printf("%d",dataRedundency[i]);
+    }
+    
+    // Calculation
+    printf("\nRemainder\n");
+    int remainder[length];
+    for(int i=0;i<dataLength;i++){
+        if(dataRedundency[i]==1){
+            for(int j=i,k=0;j<i+length,k<length;j++,k++){
+                remainder[j]=polynomial[k]^dataRedundency[j];
+                dataRedundency[j]=remainder[j];
+            }
+        }
+        for(int z=0;z<i;z++){
+            dataRedundency[z]=0;
+        }
+        for(int i=0;i<dataLength+redundency;i++){
+            printf("%d ",dataRedundency[i]);
+        }
+        printf("\n");       
+    }
+    for(int i=dataLength;i<dataLength+redundency;i++){
+        data[i]=dataRedundency[i];
+    }
+    printf("Final data : ");
+    for(int i=0;i<dataLength+redundency;i++)
+        printf("%d ",data[i]);
+    return 0;
+}
