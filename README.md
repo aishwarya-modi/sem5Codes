@@ -1,1 +1,1 @@
-college RUAS labs 5th sem
+college RUAS 
